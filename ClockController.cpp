@@ -31,8 +31,9 @@ class ClockController
   void init()
   {
     _RTC.begin();
-    _RTC.set(__TIMESTAMP__);
+    //_RTC.set(__TIMESTAMP__);
   };
+  
   void readDateTime()
   {    
     _RTC.read();
@@ -44,6 +45,7 @@ class ClockController
     _year = _RTC.getYear();
     _weekday = _RTC.getWeekDay();
   };
+  
   datetime read()
   {
     datetime dt;
@@ -57,6 +59,7 @@ class ClockController
     dt.weekday = _RTC.getWeekDay();
     return dt;
   };
+  
   void setDateTime (datetime dt)
     {
      _RTC.setHour (dt.hour);
@@ -67,6 +70,7 @@ class ClockController
      _RTC.setYear (dt.year);
      _RTC.setWeekDay (dt.weekday);     
     }
+    
   uint8_t getHour(){return _hour;}
   uint8_t getMinute(){return _minute;}
   uint8_t getSecond(){return _second;}

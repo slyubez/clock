@@ -14,6 +14,7 @@ class ClockModel
     _currentsecond = 0;
     _currenttact = 0;   
     _setdatetimeflag = false;
+    _lighttactscount = (500 / DYNAMICINDICATIONDELAYTIME) / 4;
    }
    
   void run()
@@ -27,79 +28,152 @@ class ClockModel
       _currentsecond = sec;
       _currenttact = 0;
     }
+    ++_currenttact;
     //обработка нажатия кнопок
     _buttons.readButtons();
-    if (_buttons.isButtonPressed(RETURNBUTTON))
-     { 
-       _mode = MODE_SHOWDATETIME;
-       _setdatetimeflag = false;
-     }
-    if (_buttons.isButtonPressed(MODEBUTTON))
-     {
-      _mode++;
-      if (_mode > MAXMODE)
-       {
-        _clock.setDateTime (_updatedt);
-        _mode = 0;
-        _setdatetimeflag = false;
-       }
-     }
+    if (_buttons.isButtonPressed(RETURNBUTTON)) returnButtonPressed();     
+    if (_buttons.isButtonPressed(MODEBUTTON)) modeButtonPressed();     
     if (_mode == MODE_SETYEAR)
      if (!_setdatetimeflag)
       {
        _updatedt= _clock.read();
        _setdatetimeflag = true;
       }    
-    if (_buttons.isButtonPressed(UPBUTTON)) 
-     switch (_mode)
-      {
+    if (_buttons.isButtonPressed(UPBUTTON)) upButtonPressed();
+    if (_buttons.isButtonPressed(DOWNBUTTON)) downButtonPressed();
+    
+    switch (_mode)
+     {
+       case MODE_SHOWTIME:
+        {
+         showTime();
+         break;
+        };
+       case MODE_SHOWDATETIME:
+        {
+         showDateTime();
+         break;
+        };   
        case MODE_SETYEAR:
         {
-         _updatedt.year++;
+         showSetYear();
          break;
         };    
        case MODE_SETMONTH:
         {
-         _updatedt.month++;
-         if (_updatedt.month > 12) _updatedt.month = 1;
+         showSetMonth();
          break;
         };    
        case MODE_SETDAY:
         {
-         if (_updatedt.month == 2) maxday = 29;
-          else if ((_updatedt.month == 1) || (_updatedt.month == 3) || (_updatedt.month == 5) || (_updatedt.month == 7) || (_updatedt.month == 8) || (_updatedt.month == 10) || (_updatedt.month == 12))
-                maxday = 31; else maxday = 30;
-         _updatedt.day++;
-         if (_updatedt.day > maxday) _updatedt.day = 1;
+         showSetDay();
          break;
         };    
        case MODE_SETWEEKDAY:
         {
-         _updatedt.weekday++;
-         if (_updatedt.weekday > 7) _updatedt.weekday = 1;
+         showSetWeekDay();
          break;
-        };  
+        };   
        case MODE_SETHOUR:
         {
-          _updatedt.hour++;
-          if (_updatedt.hour>23) _updatedt.hour = 0;
-          break;
+         showSetHour();
+         break;
         };       
        case MODE_SETMINUTE:
         {
-          _updatedt.minute++;
-          if (_updatedt.minute>59) _updatedt.minute = 0;
-          break;
+         showSetMinute();
+         break;
         };
        case MODE_SETSECOND:
         {
-          _updatedt.second++;
-          if (_updatedt.second>59) _updatedt.second = 0;
-          break;
+         showSetSecond();
+         break;
         };    
-      };
-    if (_buttons.isButtonPressed(DOWNBUTTON)) 
-     switch (_mode)
+    }
+  _view.showDigits(); 
+  }
+  
+ private:
+  ClockController _clock;
+  ButtonsController _buttons;
+  IndicatorView _view;
+  uint8_t _mode;
+  uint8_t _currentsecond; 
+  uint16_t _currenttact;
+  uint8_t _maxday;
+  datetime _updatedt;
+  bool _setdatetimeflag;
+  uint8_t _lighttactscount;
+
+  void returnButtonPressed()
+   { 
+     _mode = MODE_SHOWDATETIME;
+     _setdatetimeflag = false;
+   }
+   
+  void modeButtonPressed()
+   {
+     _mode++;
+     if (_mode > MAXMODE)
+      {
+       _clock.setDateTime (_updatedt);
+       _mode = 0;
+       _setdatetimeflag = false;
+      }
+   }
+   
+  void upButtonPressed()
+   {
+    switch (_mode)
+     {
+      case MODE_SETYEAR:
+       {
+        _updatedt.year++;
+        break;
+       };    
+      case MODE_SETMONTH:
+       {
+        _updatedt.month++;
+        if (_updatedt.month > 12) _updatedt.month = 1;
+        break;
+       };    
+      case MODE_SETDAY:
+       {
+        _maxday = calculateDaysInMonth (_updatedt.month);        
+        _updatedt.day++;
+        if (_updatedt.day > _maxday) _updatedt.day = 1;
+        break;
+       };    
+      case MODE_SETWEEKDAY:
+       {
+        _updatedt.weekday++;
+        if (_updatedt.weekday > 7) _updatedt.weekday = 1;
+        break;
+       };  
+      case MODE_SETHOUR:
+       {
+         _updatedt.hour++;
+         if (_updatedt.hour>23) _updatedt.hour = 0;
+         break;
+       };       
+      case MODE_SETMINUTE:
+       {
+         _updatedt.minute++;
+         if (_updatedt.minute>59) _updatedt.minute = 0;
+         break;
+       };
+      case MODE_SETSECOND:
+       {
+         _updatedt.second++;
+         if (_updatedt.second>59) _updatedt.second = 0;
+         break;
+       }   
+     }
+   }
+
+  void downButtonPressed()
+   {
+    switch (_mode)
       {
        case MODE_SETYEAR:
         {
@@ -115,14 +189,11 @@ class ClockModel
         };    
        case MODE_SETDAY:
         {
-          if (_updatedt.month == 2) maxday = 29;
-          else if ((_updatedt.month == 1) || (_updatedt.month == 3) || (_updatedt.month == 5) || (_updatedt.month == 7) || (_updatedt.month == 8) || (_updatedt.month == 10) || (_updatedt.month == 12))
-                maxday = 31; else maxday = 30;
           _updatedt.day--;
-          if (_updatedt.day<1) _updatedt.day = maxday;
+          if (_updatedt.day<1) _updatedt.day = calculateDaysInMonth (_updatedt.month);
           break;
         };    
-        case MODE_SETWEEKDAY:
+       case MODE_SETWEEKDAY:
         {
           _updatedt.weekday--;
           if (_updatedt.weekday < 1) _updatedt.weekday = 7;
@@ -130,9 +201,7 @@ class ClockModel
         };   
        case MODE_SETHOUR:
         {
-          if (_updatedt.hour = 0) _updatedt.hour = 23; 
-           else _updatedt.hour--;
-          
+          if (_updatedt.hour = 0) _updatedt.hour = 23; else _updatedt.hour--;
           break;
         };       
        case MODE_SETMINUTE:
@@ -144,72 +213,19 @@ class ClockModel
         {
           if (_updatedt.second = 0) _updatedt.second = 59; else _updatedt.second--;
           break;
-        };    
-      };
-    
-    switch (_mode)
-    {
-      case MODE_SHOWTIME:
-       {
-        showTime();
-        break;
-       };
-      case MODE_SHOWDATETIME:
-       {
-        showDateTime();
-        break;
-       };   
-      case MODE_SETYEAR:
-       {
-        showSetYear();
-        break;
-       };    
-      case MODE_SETMONTH:
-       {
-        showSetMonth();
-        break;
-       };    
-      case MODE_SETDAY:
-       {
-        showSetDay();
-        break;
-       };    
-      case MODE_SETWEEKDAY:
-       {
-        showSetWeekDay();
-        break;
-       };   
-      case MODE_SETHOUR:
-       {
-        showSetHour();
-        break;
-       };       
-      case MODE_SETMINUTE:
-       {
-        showSetMinute();
-        break;
-       };
-      case MODE_SETSECOND:
-       {
-        showSetSecond();
-        break;
-       };    
+        };
+      }
    }
-  _view.showDigits(); 
-  }
-  
- private:
-  ClockController _clock;
-  ButtonsController _buttons;
-  IndicatorView _view;
-  uint8_t _mode;
-  uint8_t _currentsecond; 
-  uint8_t _currenttact;
-  uint8_t maxday;
-  datetime _updatedt;
-  bool _setdatetimeflag;
 
-  bool turnOnLeds(){return (_currenttact < LIGHTTACTSCOUNT);}
+  uint8_t calculateDaysInMonth(uint8_t mon)
+   {
+     if (mon == 2) return 29;
+      else if ((mon == 1) || (mon == 3) || (mon == 5) || (mon == 7) 
+            || (mon == 8) || (mon == 10) || (mon == 12))
+            return 31; else return 30;
+   }
+   
+  bool turnOnLeds(){return (_currenttact < _lighttactscount);}
    
   void showTime()
   {
@@ -219,28 +235,26 @@ class ClockModel
    b = _clock.getMinute();
    _view.setDigit (3, b / 10);
    _view.setDigit (4, b % 10);
-   
+   /*
    b = _clock.getSecond();
    if ((b % 2) == 0) 
     _view.turnOnDecimalPoint();
     else _view.turnOffDecimalPoint();  
-   /* if (turnOnLeds()) _view.turnOnDecimalPoint();
-    else _view.turnOffDecimalPoint();  */ 
+    */
+   if (turnOnLeds()) _view.turnOnDecimalPoint();
+    else _view.turnOffDecimalPoint();  
   }
  
   void showDateTime()
   {
    /*
     Характеристика режима:
-    Первые 6 секунд отображаем время с морганием точки.
-    3 секунды - дату с горящей точкой.
-    Последнюю секунду - день недели в последней цифре без точек.
-   */
-   uint8_t b = _clock.getSecond();
-   if (b == _currentsecond) return;
-   _currentsecond = b;
-   uint8_t b1;
-   if (b>=20) b1 = b % 20; else b1 = b;
+    Первые 10 секунд отображаем время с морганием точки.
+    6 секунд - дату с горящей точкой.
+    4 секунды - день недели в последней цифре без точек. Далее - сначала.
+   */   
+   uint8_t b, b1;
+   if (_currentsecond>=20) b1 = _currentsecond % 20; else b1 = _currentsecond;
    if ((b1>=0) && (b1<=10))  {showTime();}
     else 
      {
@@ -268,9 +282,7 @@ class ClockModel
   
   void showSetYear()
   {
-    /*
-    Показ года. Будем отображать четыре цифры без точки.    
-    */
+    /*Показ года. Будем отображать четыре цифры без точки.*/
     uint16_t yr = _updatedt.year;
     uint16_t thousand = 0;
     uint16_t decimals = 0;
@@ -297,7 +309,7 @@ class ClockModel
     uint8_t day = _updatedt.day;        
     _view.setDigit (1, day / 10);
     _view.setDigit (2, day % 10);
-    if (_currenttact < LIGHTTACTSCOUNT)
+    if (turnOnLeds())
       {
        _view.setDigit (3, mon / 10);
        _view.setDigit (4, mon % 10);
@@ -318,7 +330,7 @@ class ClockModel
     */
     uint8_t mon = _updatedt.month;
     uint8_t day = _updatedt.day;      
-    if (_currenttact < LIGHTTACTSCOUNT)
+    if (turnOnLeds())
      {
       _view.setDigit (1, day / 10);
       _view.setDigit (2, day % 10);
@@ -354,7 +366,7 @@ class ClockModel
     _view.setDigit (1, hr / 10);
     _view.setDigit (2, hr % 10);
    
-    if (_currenttact < LIGHTTACTSCOUNT)
+    if (turnOnLeds())
      {
       _view.setDigit (3, m / 10);
       _view.setDigit (4, m % 10);
@@ -379,7 +391,7 @@ class ClockModel
     _view.setDigit (1, hr / 10);
     _view.setDigit (2, hr % 10);
 
-    if (_currenttact < LIGHTTACTSCOUNT)
+    if (turnOnLeds())
      {
       _view.setDigit (3, m / 10);
       _view.setDigit (4, m % 10);

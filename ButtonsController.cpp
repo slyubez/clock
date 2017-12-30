@@ -19,8 +19,8 @@ class ButtonsController
   }
   bool readButtons()
   {
-    int cnt = 0;
-    for (int i=0; i<=3; ++i)
+    uint8_t cnt = 0;
+    for (uint8_t i=0; i<=3; ++i)
     {
      _buttons[i] = (digitalRead(_buttonpins[i]) != HIGH);
      if (_buttons[i]) cnt ++;
