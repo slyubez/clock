@@ -85,6 +85,6 @@ class ClockController
   uint8_t _second;
   uint8_t _day;
   uint8_t _month;
-  uint8_t _year;
+  uint16_t _year;
   uint8_t _weekday;
 };

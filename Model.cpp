@@ -10,7 +10,7 @@ class ClockModel
     _buttons.init();
     _view.init();
     _clock.init();    
-    _mode = MODE_SHOWDATETIME;    
+    _mode = MODE_SHOWTIME;    
     _currentsecond = 0;
     _currenttact = 0;   
     _setdatetimeflag = false;
@@ -30,6 +30,7 @@ class ClockModel
     }
     ++_currenttact;
     //обработка нажатия кнопок
+    
     _buttons.readButtons();
     if (_buttons.isButtonPressed(RETURNBUTTON)) returnButtonPressed();     
     if (_buttons.isButtonPressed(MODEBUTTON)) modeButtonPressed();     
@@ -41,7 +42,6 @@ class ClockModel
       }    
     if (_buttons.isButtonPressed(UPBUTTON)) upButtonPressed();
     if (_buttons.isButtonPressed(DOWNBUTTON)) downButtonPressed();
-    
     switch (_mode)
      {
        case MODE_SHOWTIME:
@@ -103,21 +103,21 @@ class ClockModel
   uint8_t _maxday;
   datetime _updatedt;
   bool _setdatetimeflag;
-  uint8_t _lighttactscount;
+  uint16_t _lighttactscount;
 
   void returnButtonPressed()
    { 
      _mode = MODE_SHOWDATETIME;
      _setdatetimeflag = false;
-   }
-   
+   }  
   void modeButtonPressed()
    {
+     
      _mode++;
      if (_mode > MAXMODE)
       {
        _clock.setDateTime (_updatedt);
-       _mode = 0;
+       _mode = MODE_SHOWDATETIME;
        _setdatetimeflag = false;
       }
    }
@@ -139,7 +139,7 @@ class ClockModel
        };    
       case MODE_SETDAY:
        {
-        _maxday = calculateDaysInMonth (_updatedt.month);        
+        _maxday = calculateDaysInMonth (_updatedt.month, _updatedt.year);        
         _updatedt.day++;
         if (_updatedt.day > _maxday) _updatedt.day = 1;
         break;
@@ -190,7 +190,7 @@ class ClockModel
        case MODE_SETDAY:
         {
           _updatedt.day--;
-          if (_updatedt.day<1) _updatedt.day = calculateDaysInMonth (_updatedt.month);
+          if (_updatedt.day<1) _updatedt.day = calculateDaysInMonth (_updatedt.month, _updatedt.year);
           break;
         };    
        case MODE_SETWEEKDAY:
@@ -217,9 +217,12 @@ class ClockModel
       }
    }
 
-  uint8_t calculateDaysInMonth(uint8_t mon)
+  uint8_t calculateDaysInMonth(uint8_t mon, uint16_t yr)
    {
-     if (mon == 2) return 29;
+     if (mon == 2)
+      {
+        if ((yr % 2) == 0) return 29; else return 28;
+      }
       else if ((mon == 1) || (mon == 3) || (mon == 5) || (mon == 7) 
             || (mon == 8) || (mon == 10) || (mon == 12))
             return 31; else return 30;
@@ -289,7 +292,7 @@ class ClockModel
     if (yr > 999)
      {
       thousand = yr / 100;
-      decimals = yr - (thousand * 1000);
+      decimals = yr - (thousand * 100);
      }
       else decimals = yr;
     _view.turnOffDecimalPoint();
@@ -408,15 +411,22 @@ class ClockModel
   void showSetSecond()
   {
     /*
-    Показ секунд. Левые цифры гореть не будут. 
-    правые - показывать секунды.    
+    Показ мигающих нулей. При нажатии на кнопку режима секунды будут обнулены.    
     */
-    uint8_t s = _updatedt.second;
     _view.setDigit (1, 10);
     _view.setDigit (2, 10);
-    _view.setDigit (3, s / 10);
-    _view.setDigit (4, s % 10);
     _view.turnOffDecimalPoint();
+    if (turnOnLeds())
+     {
+      _view.setDigit (3, 0);
+      _view.setDigit (4, 0);
+      
+     } 
+     else
+      {
+        _view.setDigit (3, 10);
+        _view.setDigit (4, 10); 
+      }
   }
   
 };
