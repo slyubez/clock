@@ -237,13 +237,7 @@ class ClockModel
    _view.setDigit (2, b % 10);
    b = _clock.getMinute();
    _view.setDigit (3, b / 10);
-   _view.setDigit (4, b % 10);
-   /*
-   b = _clock.getSecond();
-   if ((b % 2) == 0) 
-    _view.turnOnDecimalPoint();
-    else _view.turnOffDecimalPoint();  
-    */
+   _view.setDigit (4, b % 10);   
    if (turnOnLeds()) _view.turnOnDecimalPoint();
     else _view.turnOffDecimalPoint();  
   }
