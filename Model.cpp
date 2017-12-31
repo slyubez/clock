@@ -10,7 +10,7 @@ class ClockModel
     _buttons.init();
     _view.init();
     _clock.init();    
-    _mode = MODE_SHOWTIME;    
+    _mode = MODE_SHOWDATETIME;    
     _currentsecond = 0;
     _currenttact = 0;   
     _setdatetimeflag = false;
