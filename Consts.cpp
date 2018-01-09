@@ -17,11 +17,9 @@
 #define PIN_DOWNBUTTON 16
 #define PIN_RETURNBUTTON 17
 
-/*Time intervals*/
+/*Time intervals in microseconds*/
 #define DYNAMICINDICATIONDELAYTIME 3
 #define BUTTONSDELAYTIME 500
-
-/*Tact intervals*/
 
 /*Button constants*/
 #define MODEBUTTON 0
@@ -39,9 +37,10 @@
 #define MODE_SETHOUR 6
 #define MODE_SETMINUTE 7
 #define MODE_SETSECOND 8
+/*The MAXMODE constant is maximal mode index (excluding special *
+ * testing mode indexes). When adding new clock modes, this *
+ * constant must be corrected. */
 #define MAXMODE 8
 
 /*Special mode constants*/
 #define MODE_CHECKBUTTONS 20
-
-

@@ -29,36 +29,41 @@ class ClockController
 {
  public:
   void init()
-  {
-    _RTC.begin();
-    //_RTC.set(__TIMESTAMP__);
-  };
+    {
+      _RTC.begin();
+      if (!areClockHavingTime()) setCompileDateTime();
+    }
+
+  void setCompileDateTime()
+    {
+      _RTC.set(__TIMESTAMP__);
+    }
   
   void readDateTime()
-  {    
-    _RTC.read();
-    _hour = _RTC.getHour();
-    _minute = _RTC.getMinute();
-    _second = _RTC.getSecond();
-    _day = _RTC.getDay();
-    _month = _RTC.getMonth();
-    _year = _RTC.getYear();
-    _weekday = _RTC.getWeekDay();
-  };
+    {    
+      _RTC.read();
+      _hour = _RTC.getHour();
+      _minute = _RTC.getMinute();
+      _second = _RTC.getSecond();
+      _day = _RTC.getDay();
+      _month = _RTC.getMonth();
+      _year = _RTC.getYear();
+      _weekday = _RTC.getWeekDay();
+    };
   
   datetime read()
-  {
-    datetime dt;
-    _RTC.read();
-    dt.hour = _RTC.getHour();
-    dt.minute = _RTC.getMinute();
-    dt.second = _RTC.getSecond();
-    dt.day = _RTC.getDay();
-    dt.month = _RTC.getMonth();
-    dt.year = _RTC.getYear();
-    dt.weekday = _RTC.getWeekDay();
-    return dt;
-  };
+    {
+      datetime dt;
+      _RTC.read();
+      dt.hour = _RTC.getHour();
+      dt.minute = _RTC.getMinute();
+      dt.second = _RTC.getSecond();
+      dt.day = _RTC.getDay();
+      dt.month = _RTC.getMonth();
+      dt.year = _RTC.getYear();
+      dt.weekday = _RTC.getWeekDay();
+      return dt;
+    };
   
   void setDateTime (datetime dt)
     {
@@ -70,7 +75,15 @@ class ClockController
      _RTC.setYear (dt.year);
      _RTC.setWeekDay (dt.weekday);     
     }
-    
+
+  bool areClockHavingTime()
+    {
+     readDateTime();
+     uint8_t sec = _second;
+     delay (1100);
+     readDateTime();
+     return sec != _second;
+    }
   uint8_t getHour(){return _hour;}
   uint8_t getMinute(){return _minute;}
   uint8_t getSecond(){return _second;}
