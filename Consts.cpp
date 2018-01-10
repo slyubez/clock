@@ -37,10 +37,15 @@
 #define MODE_SETHOUR 6
 #define MODE_SETMINUTE 7
 #define MODE_SETSECOND 8
+#define MODE_SETCORRECTINGCOEFFICIENT_DIGIT1 9
+#define MODE_SETCORRECTINGCOEFFICIENT_DIGIT2 10
+#define MODE_SETCORRECTINGCOEFFICIENT_DIGIT3 11
+#define MODE_SETCORRECTINGCOEFFICIENT_DIGIT4 12
+#define MODE_SETCORRECTINGCOEFFICIENTDIRECTION 13
 /*The MAXMODE constant is maximal mode index (excluding special *
  * testing mode indexes). When adding new clock modes, this *
  * constant must be corrected. */
-#define MAXMODE 8
+#define MAXMODE 13
 
 /*Special mode constants*/
 #define MODE_CHECKBUTTONS 20

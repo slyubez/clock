@@ -19,6 +19,8 @@ class ClockModel
     _currenttact = 0;    
     _lighttactscount = (500 / DYNAMICINDICATIONDELAYTIME) / 4;
     _setdatetimeflag = false;
+    _correctingcoefficient = 0;
+    _correctingcoefficientdirection = false;
    }
    
   void run()
@@ -57,6 +59,11 @@ class ClockModel
        case MODE_SETHOUR: {showSetHour();  break;};       
        case MODE_SETMINUTE: {showSetMinute();  break;};
        case MODE_SETSECOND:  {showSetSecond();  break;};    
+       case MODE_SETCORRECTINGCOEFFICIENT_DIGIT1:  {showSetCorrectionCoefficientDigit1();  break;};    
+       case MODE_SETCORRECTINGCOEFFICIENT_DIGIT2:  {showSetCorrectionCoefficientDigit2();  break;}; 
+       case MODE_SETCORRECTINGCOEFFICIENT_DIGIT3:  {showSetCorrectionCoefficientDigit3();  break;}; 
+       case MODE_SETCORRECTINGCOEFFICIENT_DIGIT4:  {showSetCorrectionCoefficientDigit4();  break;}; 
+       case MODE_SETCORRECTIONCOEFFICIENTDIRECTION:  {showSetCorrectionCoefficientDirection();  break;};
      }
     _view.showDigits(); 
   }
@@ -72,6 +79,8 @@ class ClockModel
   datetime _updatedt;
   bool _setdatetimeflag;
   uint16_t _lighttactscount;
+  uint16_t _correctingcoefficient;
+  bool _correctingcoefficientdirection;
 
   void returnButtonPressed()
    { 
@@ -375,6 +384,17 @@ class ClockModel
          _view.setDigit (3, 10);
          _view.setDigit (4, 10); 
        }
+   }
+
+  void showSetCorrectionCoefficientDigit1()
+   {
+     _view.turnOffDecimalPoint();
+     if (turnOnLeds())
+      _view.setDigit (1, correctionCoefficient / 1000);    
+      else _view.setDigit (1, 10);
+     _view.setDigit (2, correctionCoefficient / 1000);
+     _view.setDigit (3, 10);
+     _view.setDigit (4, correctionCoefficient / 1000);
    }
   
 };
