@@ -1,5 +1,5 @@
 /* This is an open source Arduino-based desktop or wall-mounting clock project.
- * Source code files are available on https://github.com/slyubez/clock .
+ * The source code files are available on https://github.com/slyubez/clock .
  * The electric sheme will later be drawed in KiCad and uploaded to the 
  * same repository.
  * Author: Sergey Lyubeznyy, slyubez@gmail.com

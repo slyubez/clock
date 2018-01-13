@@ -1,5 +1,6 @@
 #include "ClockController.cpp"
 #include "ButtonsController.cpp"
+#include "MemoryController.cpp"
 #include "View.cpp"
 
 class ClockModel
@@ -19,8 +20,8 @@ class ClockModel
     _currenttact = 0;    
     _lighttactscount = (500 / DYNAMICINDICATIONDELAYTIME) / 4;
     _setdatetimeflag = false;
-    _correctingcoefficient = 0;
-    _correctingcoefficientdirection = false;
+    _correctioncoefficient = 0;
+    _correctiondirection = false;
    }
    
   void run()
@@ -39,13 +40,7 @@ class ClockModel
     //pressing button event handling
     _buttons.readButtons();
     if (_buttons.isButtonPressed(RETURNBUTTON)) returnButtonPressed();     
-    if (_buttons.isButtonPressed(MODEBUTTON)) modeButtonPressed();     
-    if (_mode == MODE_SETYEAR)
-      if (!_setdatetimeflag)
-        {
-         _updatedt= _clock.read();
-         _setdatetimeflag = true;
-        }    
+    if (_buttons.isButtonPressed(MODEBUTTON)) modeButtonPressed();          
     if (_buttons.isButtonPressed(UPBUTTON)) upButtonPressed();
     if (_buttons.isButtonPressed(DOWNBUTTON)) downButtonPressed();
     switch (_mode)
@@ -59,11 +54,11 @@ class ClockModel
        case MODE_SETHOUR: {showSetHour();  break;};       
        case MODE_SETMINUTE: {showSetMinute();  break;};
        case MODE_SETSECOND:  {showSetSecond();  break;};    
-       case MODE_SETCORRECTINGCOEFFICIENT_DIGIT1:  {showSetCorrectionCoefficientDigit1();  break;};    
-       case MODE_SETCORRECTINGCOEFFICIENT_DIGIT2:  {showSetCorrectionCoefficientDigit2();  break;}; 
-       case MODE_SETCORRECTINGCOEFFICIENT_DIGIT3:  {showSetCorrectionCoefficientDigit3();  break;}; 
-       case MODE_SETCORRECTINGCOEFFICIENT_DIGIT4:  {showSetCorrectionCoefficientDigit4();  break;}; 
-       case MODE_SETCORRECTIONCOEFFICIENTDIRECTION:  {showSetCorrectionCoefficientDirection();  break;};
+       case MODE_SETCORRECTIONCOEFFICIENT_DIGIT1:  {showSetCorrectionCoefficientDigit1();  break;};    
+       case MODE_SETCORRECTIONCOEFFICIENT_DIGIT2:  {showSetCorrectionCoefficientDigit2();  break;}; 
+       case MODE_SETCORRECTIONCOEFFICIENT_DIGIT3:  {showSetCorrectionCoefficientDigit3();  break;}; 
+       case MODE_SETCORRECTIONCOEFFICIENT_DIGIT4:  {showSetCorrectionCoefficientDigit4();  break;}; 
+       case MODE_SETCORRECTIONDIRECTION:  {showSetCorrectionDirection();  break;};
      }
     _view.showDigits(); 
   }
@@ -71,6 +66,7 @@ class ClockModel
  private:
   ClockController _clock;
   ButtonsController _buttons;
+  MemoryController _mem;
   IndicatorView _view;
   uint8_t _mode;
   uint8_t _currentsecond; 
@@ -79,14 +75,48 @@ class ClockModel
   datetime _updatedt;
   bool _setdatetimeflag;
   uint16_t _lighttactscount;
-  uint16_t _correctingcoefficient;
-  bool _correctingcoefficientdirection;
+  uint16_t _d4, _d3, _d2, _d1;
+  uint16_t _correctioncoefficient;
+  bool _correctiondirection;
+
+  void fetchCorrectionCoefficient()
+   {
+    _correctioncoefficient = _mem.readWord (CORRECTIONCOEFFICIENTADDRESS);
+    _correctiondirection = (_mem.readByte(CORRECTIONDIRECTIONADDRESS) != 0);
+    if (_correctioncoefficient > 9999) 
+     {
+      _correctioncoefficient = 0;
+      writeCorrectionCoefficient();
+     }
+   }
+
+  void writeCorrectionCoefficient()
+   {
+    _mem.writeWord (CORRECTIONCOEFFICIENTADDRESS, _correctioncoefficient);
+    byte b;
+    if (_correctiondirection) b = 1; else b = 0;
+    _mem.writeByte (CORRECTIONDIRECTIONADDRESS, b); 
+   }
+
+  void calculateCorrectionCoefficient()
+   {
+     _correctioncoefficient = (_d1*1000)+(_d2*100)+(_d3*10)+_d4;
+   }
+
+  void divideCorrectionCoefficient()
+   {
+     _d1 = _correctioncoefficient/1000;
+     _d2 = (_correctioncoefficient%1000)/100;
+     _d3 = (_correctioncoefficient%100)/10;
+     _d4 = _correctioncoefficient % 10;
+   }
 
   void returnButtonPressed()
    { 
      _mode = MODE_SHOWDATETIME;
      _setdatetimeflag = false;
-   }  
+   }
+     
   void modeButtonPressed()
    { 
      if (_mode == MODE_SETSECOND) _updatedt.second = 0;
@@ -96,7 +126,15 @@ class ClockModel
        _clock.setDateTime (_updatedt);
        _mode = MODE_SHOWDATETIME;
        _setdatetimeflag = false;
-      }
+       return;
+      }     
+     if (_mode == MODE_SETYEAR)
+      if (!_setdatetimeflag)
+        {
+         _updatedt = _clock.read();
+         _setdatetimeflag = true;
+        }
+     if (_mode == MODE_SETCORRECTIONCOEFFICIENT_DIGIT1) divideCorrectionCoefficient(); 
    }
    
   void upButtonPressed()
@@ -130,15 +168,48 @@ class ClockModel
       case MODE_SETHOUR:
        {
          _updatedt.hour++;
-         if (_updatedt.hour>23) _updatedt.hour = 0;
+         if (_updatedt.hour > 23) _updatedt.hour = 0;
          break;
        };       
       case MODE_SETMINUTE:
        {
          _updatedt.minute++;
-         if (_updatedt.minute>59) _updatedt.minute = 0;
+         if (_updatedt.minute > 59) _updatedt.minute = 0;
          break;
        };
+      case MODE_SETCORRECTIONCOEFFICIENT_DIGIT1:
+       {
+         _d1++;
+         if (_d1 > 9) _d1 = 0;
+         calculateCorrectionCoefficient();
+         break;
+       }; 
+      case MODE_SETCORRECTIONCOEFFICIENT_DIGIT2:
+       {
+         _d2++;
+         if (_d2 > 9) _d2 = 0;
+         calculateCorrectionCoefficient();
+         break;
+       };
+      case MODE_SETCORRECTIONCOEFFICIENT_DIGIT3:
+       {
+         _d3++;
+         if (_d3 > 9) _d3 = 0;
+         calculateCorrectionCoefficient();
+         break;
+       }; 
+      case MODE_SETCORRECTIONCOEFFICIENT_DIGIT4:
+       {
+         _d4++;
+         if (_d4 > 9) _d4 = 0;
+         calculateCorrectionCoefficient();
+         break;
+       }; 
+      case MODE_SETCORRECTIONDIRECTION:
+       {
+         _correctiondirection = (!_correctiondirection);
+         break;
+       };  
      }
    }
 
@@ -155,13 +226,13 @@ class ClockModel
        case MODE_SETMONTH:
         {
           _updatedt.month--;
-          if (_updatedt.month<1) _updatedt.month = 12;
+          if (_updatedt.month < 1) _updatedt.month = 12;
           break;
         };    
        case MODE_SETDAY:
         {
           _updatedt.day--;
-          if (_updatedt.day<1) _updatedt.day = calculateDaysInMonth (_updatedt.month, _updatedt.year);
+          if (_updatedt.day < 1) _updatedt.day = calculateDaysInMonth (_updatedt.month, _updatedt.year);
           break;
         };    
        case MODE_SETWEEKDAY:
@@ -172,14 +243,43 @@ class ClockModel
         };   
        case MODE_SETHOUR:
         {
-          if (_updatedt.hour = 0) _updatedt.hour = 23; else _updatedt.hour--;
+          if (_updatedt.hour == 0) _updatedt.hour = 23; else _updatedt.hour--;
           break;
         };       
        case MODE_SETMINUTE:
         {
-          if (_updatedt.minute = 0) _updatedt.minute = 59; else _updatedt.minute--;
+          if (_updatedt.minute == 0) _updatedt.minute = 59; else _updatedt.minute--;
           break;
-        };       
+        }; 
+       case MODE_SETCORRECTIONCOEFFICIENT_DIGIT1:
+       {
+         if (_d1 == 0) _d1 = 9; else _d1--;
+         calculateCorrectionCoefficient();
+         break;
+       }; 
+      case MODE_SETCORRECTIONCOEFFICIENT_DIGIT2:
+       {
+         if (_d2 == 0) _d2 = 9; else _d2--;
+         calculateCorrectionCoefficient();
+         break;
+       };
+      case MODE_SETCORRECTIONCOEFFICIENT_DIGIT3:
+       {
+         if (_d3 == 0) _d3 = 9; else _d3--;
+         calculateCorrectionCoefficient();
+         break;
+       }; 
+      case MODE_SETCORRECTIONCOEFFICIENT_DIGIT4:
+       {
+         if (_d4 == 0) _d4 = 9; else _d4--;
+         calculateCorrectionCoefficient();
+         break;
+       };  
+      case MODE_SETCORRECTIONDIRECTION:
+       {
+         _correctiondirection = (!_correctiondirection);
+         break;
+       };               
       }
    }
 
@@ -390,12 +490,52 @@ class ClockModel
    {
      _view.turnOffDecimalPoint();
      if (turnOnLeds())
-      _view.setDigit (1, correctionCoefficient / 1000);    
+      _view.setDigit (1, _d1);    
       else _view.setDigit (1, 10);
-     _view.setDigit (2, correctionCoefficient / 1000);
-     _view.setDigit (3, 10);
-     _view.setDigit (4, correctionCoefficient / 1000);
+     _view.setDigit (2, _d2);
+     _view.setDigit (3, _d3);
+     _view.setDigit (4, _d4);
    }
+  void showSetCorrectionCoefficientDigit2()
+   {
+     _view.turnOffDecimalPoint();
+     if (turnOnLeds())
+      _view.setDigit (2, _d2);    
+      else _view.setDigit (2, 10);
+     _view.setDigit (1, _d1);
+     _view.setDigit (3, _d3);
+     _view.setDigit (4, _d4);
+   }
+  void showSetCorrectionCoefficientDigit3()
+   {
+     _view.turnOffDecimalPoint();
+     if (turnOnLeds())
+      _view.setDigit (3, _d3);    
+      else _view.setDigit (3, 10);
+     _view.setDigit (2, _d2);
+     _view.setDigit (1, _d1);
+     _view.setDigit (4, _d4);
+   }
+  void showSetCorrectionCoefficientDigit4()
+   {
+     _view.turnOffDecimalPoint();
+     if (turnOnLeds())
+      _view.setDigit (4, _d4);    
+      else _view.setDigit (4, 10);
+     _view.setDigit (2, _d2);
+     _view.setDigit (3, _d3);
+     _view.setDigit (1, _d1);
+   }   
+
+  void showSetCorrectionDirection()
+   {
+     _view.turnOffDecimalPoint();
+     if (_correctiondirection) _view.setDigit (1, 1);    
+      else _view.setDigit (1, 0);
+     _view.setDigit (2, 10);
+     _view.setDigit (3, 10);
+     _view.setDigit (4, 10);
+   }    
   
 };
 
