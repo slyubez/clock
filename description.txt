@@ -1,0 +1,35 @@
+This is the SL wall mount clock project that includes electric circuit,
+board and software. All these parts can be used and modified for free.
+
+Author: Sergey Lyubeznyy. E-mail: slyubez@gmail.com
+
+Used hardware:
+1. AtMega 328P-PU microcontroller with external quartz oscillator 16MHz
+and with Arduino Uno bootloader included. Its digital output pins are
+connected to seven transistor keys what control LED display segments and
+to four transistor keys what control display digit is showing at one moment.
+2. Four control buttons that are connected between analog input pins of
+microcontroller and ground. These analog pins are used as digital inputs
+with low active level, and these pins are connected to +5V power line via
+10 kiloohm resistors.
+3. Any Arduino compatible RTC board.  When I began to develop this circuit, I
+was used the DS1307-based Troyka RTC board manufactured by Amperka - a company
+of Russia (the russian language description of this board is available
+at manufacture's site on http://amperka.ru/product/troyka-rtc). But the clock
+with this board had 10-second per day time deviation (as I knew later, this
+problem is presented at many DS1307-based boards). Now I use a board based on
+DS2321 high precision real-time clock chip without any changing of program code,
+including RTC library. The Arduino library for Troyka RTC board used for this
+project, is compatible with these both boards. It is available at
+https://github.com/amperka/TroykaRTC .
+4. Some transistor keys (see electric circuit inside this repository).
+5. Four seven-segment LED one-digit displays Foryard FYS-40011BUG-11. You
+can also use similar display, for example, Kingbright SA40-18SRWA, but this
+display has some other electric parameters, so it may be required to re-
+calculate and change segment resistor values.
+6. The power of this circuit is 12V. The AtMega 328P-PU microcontroller
+and RTC require 5V power, so the 7805 power regulator is used.
+
+The software is based on Arduino language (similar to C++). To write
+the program to microcontroller, you can use Arduino IDE and programming
+board such as Verba (https://www.chipdip.ru/product/verba).
