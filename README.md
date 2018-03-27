@@ -1,2 +1,0 @@
-# clock
-Arduino clock
