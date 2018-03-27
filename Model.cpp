@@ -20,7 +20,7 @@ class ClockModel
    
   void test()
    {
-    
+/*    
      Serial.begin(9600);
      datetime dt;
      dt.day = 13;
@@ -34,27 +34,27 @@ class ClockModel
          
      String s = "Begin test";
      Serial.println (s);
-        copyDateTime (dt, &dt2);   
-        s = dt2.day;
-        s = s +".";
-        s = s +dt2.month;
-        s = s +".";
-        s = s+dt2.year;
-        s = s+"  ";
-        s = s + dt2.weekday;
-        s = s + "  ";
-        s = s+dt2.hour;
-        s = s+":";
-        s = s+dt2.minute;
-        s = s +":";
-        s = s+dt2.second;
-        Serial.println (s);   
-    while (1 == 1) {}; 
+     copyDateTime (dt, dt2);   
+    s = dt2.day;
+    s = s +".";
+    s = s +dt2.month;
+    s = s +".";
+    s = s+dt2.year;
+    s = s+"  ";
+    s = s + dt2.weekday;
+    s = s + "  ";
+    s = s+dt2.hour;
+    s = s+":";
+    s = s+dt2.minute;
+    s = s +":";
+    s = s+dt2.second;
+    Serial.println (s);   
+    while (1 == 1) {}; */
    };
   
   void run()
    {
-    _clock.read(&_currentdt);
+    _clock.read(_currentdt);
     //обнуление текущего такта на каждой новой секунде
     //для обеспечения гашения индикаторов после 0,5сек горения    
     if ((_mode == MODE_SHOWDATETIMEDAY) || (_mode == MODE_SHOWDATETIME) || (_mode == MODE_SHOWTIME))    
@@ -62,7 +62,7 @@ class ClockModel
       if (compareTime (_currentdt, _correctingtime))
         {
           correctTime();
-          _clock.read(&_currentdt);
+          _clock.read(_currentdt);
         }
     if (_currentdt.second != _currentsecond)
      {
@@ -319,7 +319,7 @@ class ClockModel
     if ((_mode == MODE_SHOWDATETIME) || (_mode == MODE_SHOWTIME) || (_mode == MODE_SHOWDATETIMEDAY))
      {
       _mode = MODE_SETYEAR;
-      copyDateTime (_currentdt, &_updatedt);
+      copyDateTime (_currentdt, _updatedt);
       divideNumber (_updatedt.year);
       return;
      }
@@ -328,7 +328,7 @@ class ClockModel
      {
       _updatedt.second = 0;
       _clock.setDateTime (_updatedt);
-      copyDateTime (_updatedt, &_correctingtime);
+      copyDateTime (_updatedt, _correctingtime);
       writeCorrectingTime ();
       delay (1000);
       _mode = readDefaultShowMode();     
@@ -345,17 +345,17 @@ class ClockModel
     _mode++;
    };
 
-  void addSeconds (datetime dt, uint16_t cnt)
+  void addSeconds (datetime& dt, uint16_t cnt)
    {
     uint32_t ut = dtToUnixTime (dt);
     ut += cnt;
-    unixTimeToDT (ut, &dt);
+    unixTimeToDT (ut, dt);
    }
 
   void correctTime()
    {
     datetime dt1;
-    copyDateTime (_currentdt, &dt1);    
+    copyDateTime (_currentdt, dt1);    
     if (_correctingdirection)
      {                 
        if ((_correctingcoefficient%1000) == 0)
@@ -657,7 +657,7 @@ class ClockModel
     {
      _correctingcoefficient = 0;
      writeCorrectingCoefficient();
-     _clock.read(&_correctingtime);     
+     _clock.read(_correctingtime);     
      writeCorrectingTime();
      return;
     }

@@ -19,18 +19,18 @@ struct datetime
   uint8_t weekday;
 };
 
-static void copyDateTime (datetime src, datetime *dest)
+static void copyDateTime (datetime& src, datetime& dest)
 {
-  dest->hour = src.hour;
-  dest->minute = src.minute;
-  dest->second = src.second;
-  dest->day = src.day;
-  dest->month = src.month;
-  dest->year = src.year;
-  dest->weekday = src.weekday;
+  dest.hour = src.hour;
+  dest.minute = src.minute;
+  dest.second = src.second;
+  dest.day = src.day;
+  dest.month = src.month;
+  dest.year = src.year;
+  dest.weekday = src.weekday;
 };
 
-static bool compareTime (datetime dt1, datetime dt2)
+static bool compareTime (datetime& dt1, datetime& dt2)
 {
   if ((dt1.hour == dt2.hour) && (dt1.minute == dt2.minute) && (dt1.second == dt2.second))
    return true; else return false;
@@ -41,7 +41,7 @@ static bool isLeapYear(uint16_t yr)
   if ((yr % 4) == 0) return true; else return false;
 };
 
-static uint32_t dtToUnixTime (datetime src)
+static uint32_t dtToUnixTime (datetime& src)
 {
   uint32_t days=0;
   for (uint16_t i=1970; i<src.year; ++i)
@@ -62,25 +62,25 @@ static uint32_t dtToUnixTime (datetime src)
   return utim;
 };
 
-static void unixTimeToDT (uint32_t ut, datetime *res)
+static void unixTimeToDT (uint32_t ut, datetime& res)
 { 
   uint16_t year;
   uint8_t month, monthLength;
   uint32_t tim;
   uint32_t days;
   tim=ut;
-  res->second=tim%60;
+  res.second=tim%60;
   tim/=60;
-  res->minute=tim%60;
+  res.minute=tim%60;
   tim/=60;
-  res->hour=tim%24;
+  res.hour=tim%24;
   tim/=24;
-  res->weekday=(tim+4)%7;
-  if (res->weekday==0) res->weekday=7;
+  res.weekday=(tim+4)%7;
+  if (res.weekday==0) res.weekday=7;
   year=1970;  
   days=0;
   while ((days+=(isLeapYear(year)?366:365))<=tim) year++;
-  res->year=year;
+  res.year=year;
   days-=isLeapYear(year)?366:365;
   tim-=days;
   days=0;
@@ -92,8 +92,8 @@ static void unixTimeToDT (uint32_t ut, datetime *res)
     if (month==2) if (isLeapYear(year)) monthLength++;         
     if (tim>=monthLength) tim-=monthLength; else break;
    }
-  res->month=month;
-  res->day = tim+1;  
+  res.month=month;
+  res.day = tim+1;  
 };
 
 class ClockController
@@ -105,19 +105,19 @@ class ClockController
     if (!isTimePresented()) _RTC.set(__TIMESTAMP__);
   };
     
- void read(datetime *dt)
+ void read(datetime& dt)
   {
     _RTC.read();   
-    dt->hour = _RTC.getHour();
-    dt->minute = _RTC.getMinute();
-    dt->second = _RTC.getSecond();
-    dt->day = _RTC.getDay();
-    dt->month = _RTC.getMonth();
-    dt->year = _RTC.getYear();
-    dt->weekday = _RTC.getWeekDay();    
+    dt.hour = _RTC.getHour();
+    dt.minute = _RTC.getMinute();
+    dt.second = _RTC.getSecond();
+    dt.day = _RTC.getDay();
+    dt.month = _RTC.getMonth();
+    dt.year = _RTC.getYear();
+    dt.weekday = _RTC.getWeekDay();    
   };
   
-  void setDateTime (datetime dt)
+  void setDateTime (datetime& dt)
     {
      _RTC.setHour (dt.hour);
      _RTC.setMinute (dt.minute);
