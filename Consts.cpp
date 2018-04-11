@@ -21,7 +21,7 @@
 
 /*Time intervals*/
 #define DYNAMICINDICATIONDELAYTIME 3
-#define BUTTONSDELAYTIME 500
+#define BUTTONSDELAYTIME 300
 
 /*Tact intervals*/
 
